@@ -9,7 +9,7 @@ if [[ $EUID -ne 0 ]]; then
   exit 1
 fi
 
-# 2. Docker‑Check
+# 2. Docker-Check
 if command -v docker &>/dev/null; then
   echo "Docker ist bereits installiert:"
   docker --version
@@ -18,46 +18,59 @@ if command -v docker &>/dev/null; then
 fi
 
 # 3. Systemaktualisierung
-read -p "System jetzt zuerst 'apt update && upgrade -y' ausführen? (y/n): " do_full_up
-[[ "$do_full_up" == "y" ]] && apt update && apt upgrade -y
+read -p "System jetzt zuerst 'apt update && apt upgrade -y' ausführen? (y/n): " do_full_up
 
-# 4. Alte Docker‑Pakete entfernen
-echo "Entferne ggf. alte Docker‑Pakete …"
+# 4. Alte Docker-Pakete entfernen
+echo "Entferne ggf. alte Docker-Pakete …"
 for pkg in docker.io docker-doc docker-compose podman-docker containerd runc; do
   apt-get -qq remove --purge -y "$pkg" 2>/dev/null || true
 done
 
-# 5. Voraussetzungen & Docker‑Repo
-apt-get update
+# 5. Voraussetzungen & Docker-Repo
+rm -f /etc/apt/sources.list.d/docker.list
+rm -f /etc/apt/keyrings/docker.{asc,gpg}
+
+apt-get update -qq
 apt-get install -y ca-certificates curl gnupg lsb-release
 
 install -m 0755 -d /etc/apt/keyrings
 curl -fsSL https://download.docker.com/linux/debian/gpg \
-  | gpg --dearmor -o /etc/apt/keyrings/docker.asc
+  | gpg --batch --yes --dearmor -o /etc/apt/keyrings/docker.gpg
+chmod a+r /etc/apt/keyrings/docker.gpg
 
-chmod a+r /etc/apt/keyrings/docker.asc
-
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] \
-https://download.docker.com/linux/debian $(lsb_release -cs) stable" \
-  > /etc/apt/sources.list.d/docker.list
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" \
+  | tee /etc/apt/sources.list.d/docker.list >/dev/null
 
 apt-get update
+[[ "$do_full_up" == "y" ]] && apt-get upgrade -y
 
-# 6. Docker & Compose Installation
+# 6. Docker + Compose Installation
 apt-get install -y docker-ce docker-ce-cli containerd.io \
                    docker-buildx-plugin docker-compose-plugin
 systemctl enable --now docker
 
 # 7. Benutzer zur Gruppe 'docker' hinzufügen
-read -p "Soll '$SUDO_USER' zur Gruppe 'docker' hinzugefügt werden? (y/n): " add_grp
-[[ "$add_grp" == "y" ]] && { usermod -aG docker "$SUDO_USER"; echo "Bitte neu einloggen."; }
+TARGET_USER="${SUDO_USER:-root}"
+if [[ "$TARGET_USER" != "root" ]]; then
+  read -p "Soll '$TARGET_USER' zur Gruppe 'docker' hinzugefügt werden (ohne sudo nutzen)? (y/n): " add_grp
+  if [[ "$add_grp" == "y" ]]; then
+    usermod -aG docker "$TARGET_USER"
+    echo "Bitte einmal neu einloggen, damit die Gruppenzugehörigkeit aktiv wird."
+  fi
+fi
 
-# 8. Aufräumen (Repo‑Ordner entfernen)
+# 8. Aufräumen: Repository-Verzeichnis löschen
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(dirname "$SCRIPT_DIR")"
+REPO_ROOT="$(readlink -f "$SCRIPT_DIR/..")"
 if [[ "$(basename "$REPO_ROOT")" == "proxmox-scripts" ]]; then
-  read -p "Repository‑Verzeichnis '$REPO_ROOT' löschen? (y/n): " remove_repo
-  [[ "$remove_repo" == "y" ]] && { rm -rf "$REPO_ROOT"; echo "Verzeichnis entfernt."; }
+  read -p "Repository-Verzeichnis '$REPO_ROOT' löschen? (y/n): " remove_repo
+  if [[ "$remove_repo" == "y" ]]; then
+    cd /
+    rm -rf "$REPO_ROOT"
+    echo "Verzeichnis gelöscht – wechsle in dein Home-Verzeichnis."
+    cd "$HOME"
+    exec "$SHELL" -l
+  fi
 fi
 
 echo "Installation abgeschlossen."
