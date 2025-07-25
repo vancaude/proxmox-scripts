@@ -1,5 +1,4 @@
 #!/bin/bash
-
 set -euo pipefail
 
 echo "===== Docker‑&‑Compose Setup‑Skript ====="
@@ -59,6 +58,17 @@ read -p "Soll '$SUDO_USER' zur Gruppe 'docker' hinzugefügt werden (ohne sudo nu
 if [[ "$add_grp" == "y" ]]; then
   usermod -aG docker "$SUDO_USER"
   echo "Bitte einmal neu einloggen, damit die Gruppenzugehörigkeit aktiv wird."
+fi
+
+# 8. Aufräumen: Repository löschen
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(dirname "$SCRIPT_DIR")"
+if [[ "$(basename "$REPO_ROOT")" == "proxmox-scripts" ]]; then
+  read -p "Repository-Verzeichnis '$REPO_ROOT' löschen? (y/n): " remove_repo
+  if [[ "$remove_repo" == "y" ]]; then
+    rm -rf "$REPO_ROOT"
+    echo "Verzeichnis entfernt."
+  fi
 fi
 
 echo "Installation abgeschlossen."

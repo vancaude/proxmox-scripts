@@ -1,27 +1,26 @@
-# disableIpV6_cronjob_update.sh
-
-Dieses Bash-Skript deaktiviert IPv6 in einem LXC-Container und richtet einen täglichen Cronjob für automatische Systemupdates ein.
-
-## Installation und Ausführung
+## Kleine Proxmox Helferscripte
 
 ```bash
 git clone https://github.com/vancaude/proxmox-scripts.git
-<<<<<<< HEAD
 ```
 ```bash
 cd proxmox-scripts/scripts
 ```
+
+## IPv6 deaktivieren und automatische Updates aktivieren - disableIpV6_cronjob_update.sh
+
 ```bash
 chmod +x disableIpV6_cronjob_update.sh
 ```
 ```bash
 ./disableIpV6_cronjob_update.sh
 ```
-=======
 
-cd proxmox-scripts/scripts
+## Docker + Docker-Compose installieren - docker_install.sh
 
-chmod +x disableIpV6_cronjob_update.sh
-
-./disableIpV6_cronjob_update.sh
->>>>>>> 5e05e87 (readmeupdate)
+```bash
+chmod +x docker_install.sh
+```
+```bash
+./docker_install.sh
+```
