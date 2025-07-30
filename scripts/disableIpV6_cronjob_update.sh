@@ -3,14 +3,14 @@ set -euo pipefail
 
 echo "===== LXC Setup Script – IPv6 & Auto-Update ====="
 
-# 1. Container-Prüfung
+# 1. container check
 if [ ! -f /proc/1/environ ] || ! grep -qa 'container=' /proc/1/environ; then
   echo "WARNUNG: Dieses Skript scheint nicht in einem Container zu laufen."
   read -p "Trotzdem fortfahren? (y/n): " confirm
   [[ $confirm != "y" ]] && exit 1
 fi
 
-# 2. IPv6 deaktivieren
+# 2. deactivate ipv6
 read -p "Möchtest du IPv6 deaktivieren? (y/n): " disable_ipv6
 if [[ "$disable_ipv6" == "y" ]]; then
   echo "IPv6 wird deaktiviert …"
@@ -27,7 +27,7 @@ else
   echo "IPv6 bleibt aktiv."
 fi
 
-# 3. Cronjob für tägliches apt update/upgrade
+# 3. cronjob for daily updates 4 am
 read -p "Cronjob für tägliches apt update & upgrade um 4 Uhr morgens setzen? (y/n): " set_cron
 if [[ "$set_cron" == "y" ]]; then
   CRONCMD="/usr/bin/apt update && /usr/bin/apt upgrade -y > /dev/null 2>&1"
@@ -42,7 +42,7 @@ else
   echo "Kein Cronjob eingerichtet."
 fi
 
-# 4. Sofortiges Update
+# 4. immediate update
 read -p "Jetzt sofort 'apt update && upgrade -y' ausführen? (y/n): " do_update
 if [[ "$do_update" == "y" ]]; then
   echo "Führe Update & Upgrade aus …"
@@ -50,7 +50,7 @@ if [[ "$do_update" == "y" ]]; then
   echo "System aktualisiert."
 fi
 
-# 5. Aufräumen: Repository löschen
+# 5. cleaning - remove folder
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(dirname "$SCRIPT_DIR")"
 if [[ "$(basename "$REPO_ROOT")" == "proxmox-scripts" ]]; then
