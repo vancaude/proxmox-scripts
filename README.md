@@ -24,3 +24,13 @@ chmod +x docker_install.sh
 ```bash
 ./docker_install.sh
 ```
+
+### Proxmox - No valid subscription popup removal
+Tested with Proxmox VE 8.4.5
+
+```bash
+chmod +x no_subscription_popup.sh
+```
+```bash
+./no_subscription_popup.sh
+```

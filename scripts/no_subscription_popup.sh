@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
-# Removes the "No valid subscription" popup in Proxmox VE >= 8.4.x
-# Tested with Proxmox 8.4.5
-
 set -euo pipefail
 
-PKG_DIR="/usr/share/javascript/proxmox-widget-toolkit"
-TIMESTAMP="$(date +%F_%H-%M-%S)"
-BACKUP_SUFFIX=".bak.${TIMESTAMP}"
+echo "===== Disable Proxmox Subscription Notice ====="
 
-echo "Locating the JavaScript file..."
+# 1. Root check
+if [[ $EUID -ne 0 ]]; then
+  echo "This script must be run as root."
+  exit 1
+fi
+
+# 2. Locate JavaScript file
+PKG_DIR="/usr/share/javascript/proxmox-widget-toolkit"
 JS_FILE=$(find "$PKG_DIR" -type f -name "*.js" -exec grep -l "No valid subscription" {} + | head -n1)
 
 if [[ -z "$JS_FILE" ]]; then
@@ -16,24 +18,41 @@ if [[ -z "$JS_FILE" ]]; then
   exit 1
 fi
 
-echo "Found: $JS_FILE"
-echo "Creating backup → ${JS_FILE}${BACKUP_SUFFIX}"
-cp "$JS_FILE" "${JS_FILE}${BACKUP_SUFFIX}"
+echo "Found JavaScript file: $JS_FILE"
 
-echo "Applying patch..."
-sed -E -i \
-  "s/data\.status\.toLowerCase\(\) !== 'active'/false/g" \
-  "$JS_FILE"
+# 3. Backup original file
+TIMESTAMP="$(date +%F_%H-%M-%S)"
+BACKUP_FILE="${JS_FILE}.bak.${TIMESTAMP}"
+cp "$JS_FILE" "$BACKUP_FILE"
+echo "Backup created at: $BACKUP_FILE"
 
-# No change = already patched
-if cmp -s "${JS_FILE}${BACKUP_SUFFIX}" "$JS_FILE"; then
+# 4. Patch file
+sed -E -i "s/data\.status\.toLowerCase\(\) !== 'active'/false/g" "$JS_FILE"
+
+# 5. Check if patch was necessary
+if cmp -s "$BACKUP_FILE" "$JS_FILE"; then
   echo "Already patched. No changes made."
-  rm -f "${JS_FILE}${BACKUP_SUFFIX}"
-  exit 0
+  rm -f "$BACKUP_FILE"
+else
+  echo "Patch applied successfully."
 fi
 
-echo "Restarting pveproxy..."
+# 6. Restart service
 systemctl restart pveproxy.service
+echo "pveproxy restarted."
 
-echo "Done. Please clear your browser cache or reload the page."
-echo "Backup created at: ${JS_FILE}${BACKUP_SUFFIX}"
+# 7. Optional: remove script folder
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(readlink -f "$SCRIPT_DIR/..")"
+if [[ "$(basename "$REPO_ROOT")" == "proxmox-scripts" ]]; then
+  read -p "Delete script folder '$REPO_ROOT'? (y/n): " remove_repo
+  if [[ "$remove_repo" == "y" ]]; then
+    cd /
+    rm -rf "$REPO_ROOT"
+    echo "Script folder deleted. Returning to home directory."
+    cd "$HOME"
+    exec "$SHELL" -l
+  fi
+fi
+
+echo "Done. Please clear your browser cache (Ctrl+F5) if popup still appears."
