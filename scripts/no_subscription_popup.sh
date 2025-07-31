@@ -41,18 +41,5 @@ fi
 systemctl restart pveproxy.service
 echo "pveproxy restarted."
 
-# 7. Optional: remove script folder
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(readlink -f "$SCRIPT_DIR/..")"
-if [[ "$(basename "$REPO_ROOT")" == "proxmox-scripts" ]]; then
-  read -p "Delete script folder '$REPO_ROOT'? (y/n): " remove_repo
-  if [[ "$remove_repo" == "y" ]]; then
-    cd /
-    rm -rf "$REPO_ROOT"
-    echo "Script folder deleted. Returning to home directory."
-    cd "$HOME"
-    exec "$SHELL" -l
-  fi
-fi
 
-echo "Done. Please clear your browser cache (Ctrl+F5) if popup still appears."
+echo "Done. Please clear your browser cache (Ctrl+F5) if popup still appears."clear
