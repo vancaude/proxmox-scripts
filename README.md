@@ -34,3 +34,4 @@ chmod +x no_subscription_popup.sh
 ```bash
 ./no_subscription_popup.sh
 ```
+The script adds additionally a cronjob which executes the script every day at 05:00AM.

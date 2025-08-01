@@ -1,27 +1,27 @@
 #!/bin/bash
 set -euo pipefail
 
-echo "===== Docker‑&‑Compose Setup‑Skript ====="
+echo "===== Docker‑&‑Compose setup script ====="
 
 # 1. root check
 if [[ $EUID -ne 0 ]]; then
-  echo "Dieses Skript muss als root ausgeführt werden (sudo …)."
+  echo "This script needs to run as root (sudo …)."
   exit 1
 fi
 
 # 2. docker check
 if command -v docker &>/dev/null; then
-  echo "Docker ist bereits installiert:"
+  echo "Docker is already installed:"
   docker --version
-  read -p "Trotzdem fortfahren und neu installieren? (y/n): " reinstall
-  [[ "$reinstall" != "y" ]] && { echo "Abbruch auf Wunsch des Nutzers."; exit 0; }
+  read -p "Start anyway? (y/n): " reinstall
+  [[ "$reinstall" != "y" ]] && { echo "User stopped the install process."; exit 0; }
 fi
 
 # 3. system update
-read -p "System jetzt zuerst 'apt update && apt upgrade -y' ausführen? (y/n): " do_full_up
+read -p "Do 'apt update && apt upgrade -y' first? (y/n): " do_full_up
 
 # 4. remove old docker packages
-echo "Entferne ggf. alte Docker-Pakete …"
+echo "Remove old docker packages …"
 for pkg in docker.io docker-doc docker-compose podman-docker containerd runc; do
   apt-get -qq remove --purge -y "$pkg" 2>/dev/null || true
 done
@@ -52,10 +52,10 @@ systemctl enable --now docker
 # 7. add user to 'docker' group
 TARGET_USER="${SUDO_USER:-root}"
 if [[ "$TARGET_USER" != "root" ]]; then
-  read -p "Soll '$TARGET_USER' zur Gruppe 'docker' hinzugefügt werden (ohne sudo nutzen)? (y/n): " add_grp
+  read -p "Should '$TARGET_USER' be added to user group 'docker' (without to use sudo)? (y/n): " add_grp
   if [[ "$add_grp" == "y" ]]; then
     usermod -aG docker "$TARGET_USER"
-    echo "Bitte einmal neu einloggen, damit die Gruppenzugehörigkeit aktiv wird."
+    echo "Please sign in again to activate privileges."
   fi
 fi
 
@@ -63,14 +63,14 @@ fi
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(readlink -f "$SCRIPT_DIR/..")"
 if [[ "$(basename "$REPO_ROOT")" == "proxmox-scripts" ]]; then
-  read -p "Repository-Verzeichnis '$REPO_ROOT' löschen? (y/n): " remove_repo
+  read -p "Repository folder '$REPO_ROOT' delete? (y/n): " remove_repo
   if [[ "$remove_repo" == "y" ]]; then
     cd /
     rm -rf "$REPO_ROOT"
-    echo "Verzeichnis gelöscht – wechsle in dein Home-Verzeichnis."
+    echo "Deleted repository. Move to home folder"
     cd "$HOME"
     exec "$SHELL" -l
   fi
 fi
 
-echo "Installation abgeschlossen."
+echo "Installation done."
