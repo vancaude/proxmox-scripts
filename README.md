@@ -1,4 +1,4 @@
-# Kleine Proxmox Helferscripte
+# Little Proxmox Helper Scripts
 
 ```bash
 git clone https://github.com/vancaude/proxmox-scripts.git
@@ -7,7 +7,7 @@ git clone https://github.com/vancaude/proxmox-scripts.git
 cd proxmox-scripts/scripts
 ```
 
-### IPv6 deaktivieren und automatische Updates aktivieren - disableIpV6_cronjob_update.sh
+### IPv6 deactivation and automatic updates - disableIpV6_cronjob_update.sh
 
 ```bash
 chmod +x disableIpV6_cronjob_update.sh
@@ -16,7 +16,7 @@ chmod +x disableIpV6_cronjob_update.sh
 ./disableIpV6_cronjob_update.sh
 ```
 
-### Docker + Docker-Compose installieren - docker_install.sh
+### Docker + Docker-Compose installation - docker_install.sh
 
 ```bash
 chmod +x docker_install.sh
